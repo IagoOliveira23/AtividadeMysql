@@ -1,0 +1,44 @@
+1ª) Faça uma listagem de título e preço dos livros, ordenando por título.
+
+SELECT titulo, preco FROM livro
+ORDER BY titulo;
+
+2ª) Liste todos os livros que não tenham no estoque.
+
+SELECT titulo FROM livro
+WHERE estoque = 0;
+
+3ª) Crie uma listagem de todos os livros que tenham o preço entre 30 e 40.
+
+SELECT titulo, preco FROM livro
+WHERE preco > 30 and preco < 40;
+
+4ª) Liste todas as editoras que publicaram livros do autor Julio Cesar de Barros.
+
+SELECT nome FROM editora
+INNER JOIN livro ON livro.ideditora = editora.ideditora
+INNER JOIN escreve ON escreve.idlivro = livro.idlivro
+WHERE idautor = (SELECT idautor FROM autor WHERE nome = 'Julio Cesar de Barros');
+
+5ª) Liste título e preço de livro, cujo livro esteja acima da média e ordene pelo maior preço.
+
+SELECT titulo, preco FROM livro
+WHERE preco > (SELECT AVG(preco) FROM livro)
+ORDER BY preco DESC;
+
+6ª) Liste os títulos e gêneros de cada grupo.
+
+SELECT titulo, descricao FROM livro
+INNER JOIN genero ON genero.idgenero = livro.idgenero;
+
+7ª) Mostre o valor do livro mais caro.
+
+SELECT max(preco) AS MAIOR_PREÇO FROM livro;
+
+8ª) Liste qual cliente comprou o livro chamado PS eu te amo.
+
+SELECT cliente.nome FROM cliente
+INNER JOIN venda ON venda.idcliente = cliente.idcliente
+INNER JOIN itens_da_venda ON itens_da_venda.idvenda = venda.idvenda
+INNER JOIN livro ON livro.idlivro = itens_da_venda.idlivro
+WHERE livro.titulo = 'P.s. - Eu Te Amo';

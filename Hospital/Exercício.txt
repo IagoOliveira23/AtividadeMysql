@@ -1,0 +1,67 @@
+-- 1) Liste o nome, a idade e o endereço de todos os pacientes do sexo feminino.
+
+SELECT nome, idade, endereco FROM pacientes
+WHERE sexo = 'Feminino';
+
+-- 2) Liste o nome do paciente e o nome do médico para todas as consultas realizadas.
+
+SELECT pacientes.nome, medicos.nome, data_consulta FROM consultas
+INNER JOIN pacientes ON pacientes.id = consultas.paciente_id
+INNER JOIN medicos ON medicos.id = consultas.medico_id;
+
+-- 3) Liste o nome do paciente, a especialidade do médico e a receita para todos os prontuários médicos registrados.
+
+SELECT pacientes.nome, medicos.especialidade, prontuarios.receita FROM prontuarios
+INNER JOIN medicos ON medicos.id = prontuarios.medico_id
+INNER JOIN pacientes ON pacientes.id = prontuarios.paciente_id;
+
+-- 4) Liste o nome do médico e o número total de consultas realizadas por cada médico.
+
+SELECT medicos.nome, count(medicos.nome) FROM medicos
+INNER JOIN consultas ON consultas.medico_id = medicos.id
+GROUP BY medicos.nome;
+
+-- 5) Liste o nome do paciente, o nome do médico e a data da consulta para todas as consultas agendadas que ocorrerão na mesma data de uma consulta do paciente com o ID = 3.
+
+SELECT pacientes.nome, medicos.nome, consultas.data_consulta FROM consultas
+INNER JOIN pacientes ON pacientes.id = consultas.paciente_id
+INNER JOIN medicos ON medicos.id = consultas.medico_id
+WHERE consultas.data_consulta IN (SELECT data_consulta FROM consultas WHERE consultas.paciente_id = 3);
+
+-- 6) Liste o nome do paciente, o nome do médico e o diagnóstico para todos os prontuários médicos registrados que receitem o uso de analgésicos.
+
+SELECT pacientes.nome, medicos.nome, prontuarios.diagnostico FROM prontuarios
+INNER JOIN pacientes ON pacientes.id = prontuarios.paciente_id
+INNER JOIN medicos ON medicos.id = prontuarios.medico_id
+WHERE receita LIKE '%analgésicos%';
+
+-- 7) Liste os pacientes que tiveram consultas agendadas no mês 5.
+
+SELECT pacientes.nome FROM pacientes
+INNER JOIN consultas ON consultas.paciente_id = pacientes.id
+WHERE Month(consultas.data_consulta) = '05';
+
+-- 8) Liste todos os pacientes que tiveram consultas agendadas com todos os médicos disponíveis.
+
+SELECT DISTINCT pacientes.nome FROM pacientes
+INNER JOIN consultas ON consultas.paciente_id = pacientes.id
+INNER JOIN medicos ON medicos.id = consultas.medico_id
+WHERE pacientes.id = (SELECT consultas.paciente_id FROM consultas
+GROUP BY consultas.paciente_id
+ORDER BY count(DISTINCT consultas.medico_id)
+DESC LIMIT 1);
+
+-- 9) Liste todos os médicos que têm pelo menos 2 consultas agendadas com pacientes diferentes.
+
+SELECT * FROM medicos
+WHERE medicos.id IN (SELECT medicos.id FROM consultas
+WHERE medicos.id = consultas.medico_id
+GROUP BY medicos.id, medicos.nome, medicos.especialidade
+HAVING count(DISTINCT consultas.paciente_id) >= 2);
+
+-- 10) liste o médico que atendeu mais pacientes
+
+SELECT medicos.nome, count(medicos.nome) AS quant_atendimentos FROM medicos
+INNER JOIN consultas ON consultas.medico_id = medicos.id
+GROUP BY medicos.nome
+ORDER BY count(medicos.nome) DESC LIMIT 1;

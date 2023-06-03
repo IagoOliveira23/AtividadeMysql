@@ -1,0 +1,57 @@
+-- 1) Obter o nome e a especialidade de todos os professores que lecionam disciplinas com carga horária superior a 50 horas.
+SELECT professores.nome, professores.especialidade FROM professores
+INNER JOIN disciplinas ON disciplinas.professor_id = professores.id
+WHERE disciplinas.carga_horaria > 50;
+
+-- 2) Obter o nome e o email dos alunos que estão matriculados em cursos ministrados pelo professor "Carlos Ferreira".
+SELECT alunos.nome, alunos.email FROM alunos
+INNER JOIN matriculas ON matriculas.aluno_id = alunos.id
+INNER JOIN disciplinas ON disciplinas.id = matriculas.disciplina_id
+WHERE disciplinas.professor_id = (SELECT professores.id FROM professores WHERE professores.nome = 'Carlos Ferreira');
+
+-- 3) Obter o nome a descrição do curso que têm a maior carga horária entre todos os cursos.
+SELECT cursos.nome, cursos.descricao FROM cursos
+INNER JOIN disciplinas ON disciplinas.curso_id = cursos.id
+GROUP BY cursos.nome, cursos.descricao
+ORDER BY sum(disciplinas.carga_horaria) DESC LIMIT 1;
+
+-- 4) Obter o nome e a descrição dos cursos nos quais o aluno "João Silva" está matriculado:
+SELECT cursos.nome, cursos.descricao FROM matriculas
+INNER JOIN alunos ON alunos.id = matriculas.aluno_id
+INNER JOIN disciplinas ON disciplinas.id = matriculas.disciplina_id
+INNER JOIN cursos ON cursos.id = disciplinas.curso_id
+WHERE alunos.nome = "João Silva";
+
+-- 5) Obter o nome e a carga horária das disciplinas que possuem mais de 2 alunos matriculados:
+SELECT disciplinas.nome, disciplinas.carga_horaria FROM disciplinas
+WHERE disciplinas.id IN (SELECT matriculas.disciplina_id FROM matriculas 
+GROUP BY matriculas.disciplina_id
+HAVING count(matriculas.disciplina_id) > 2);
+
+
+-- 6) Obter o nome e a idade dos alunos que estão matriculados em disciplinas ministradas por professores com especialidade em "Redes":
+SELECT alunos.nome, alunos.idade FROM disciplinas
+INNER JOIN matriculas ON matriculas.disciplina_id = disciplinas.id
+INNER JOIN alunos ON alunos.id = matriculas.aluno_id
+INNER JOIN professores ON professores.id = disciplinas.professor_id
+WHERE professores.especialidade = (SELECT professores.especialidade FROM professores WHERE especialidade LIKE "%redes%");
+
+-- 7) Obter o nome dos cursos nos quais todos os alunos estão matriculados:
+SELECT cursos.nome FROM cursos
+WHERE cursos.id IN (SELECT disciplinas.curso_id FROM disciplinas
+WHERE disciplinas.id IN (SELECT matriculas.disciplina_id FROM matriculas
+GROUP BY matriculas.disciplina_id
+HAVING count(matriculas.disciplina_id) = (SELECT count(*) FROM alunos)));
+
+-- 8) Obter o nome dos alunos que estão matriculados em disciplinas com carga horária superior à média das disciplinas
+SELECT alunos.nome, carga_horaria FROM disciplinas
+INNER JOIN cursos ON cursos.id = disciplinas.curso_id
+INNER JOIN matriculas ON matriculas.disciplina_id = disciplinas.id
+INNER JOIN alunos ON alunos.id = matriculas.aluno_id
+WHERE disciplinas.carga_horaria > (SELECT avg(disciplinas.carga_horaria) FROM disciplinas);
+
+-- 9) Obter o nome dos alunos e o curso que eles estão matriculados:
+SELECT alunos.nome, cursos.nome FROM matriculas
+INNER JOIN alunos ON alunos.id = matriculas.aluno_id
+INNER JOIN disciplinas ON disciplinas.id = matriculas.disciplina_id
+INNER JOIN cursos ON cursos.id = disciplinas.curso_id;

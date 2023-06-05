@@ -1,0 +1,147 @@
+-- 1) Quais são os cargos existentes na empresa com mais funcionários
+SELECT 
+    cargos.nome
+FROM
+    cargos
+        INNER JOIN
+    funcionarios ON funcionarios.Cargos_idCargos = Cargos_idCargos
+GROUP BY cargos.idCargos
+ORDER BY COUNT(Cargos_idCargos) DESC
+LIMIT 1;
+
+
+-- 2) O nome dos funcionários e o quanto eles recebem em um ano
+SELECT 
+    funcionarios.nome, SUM(funcionarios.salario * 12) as Total_Ano
+FROM
+    funcionarios
+GROUP BY funcionarios.nome;
+
+
+-- 3) Liste os departamentos e a quantidade de funcionários lotados em cada
+SELECT 
+    departamentos.Nome,
+    COUNT(lotado_em.Funcionarios_idFuncionarios)
+FROM
+    departamentos
+        INNER JOIN
+    lotado_em ON lotado_em.Departamentos_idDepartamentos = departamentos_idDepartamentos
+GROUP BY departamentos.Nome;
+
+
+-- 4) Liste os funcionários que recebam um salário maior que a média
+SELECT 
+    funcionarios.nome
+FROM
+    funcionarios
+WHERE
+    funcionarios.Salario > (SELECT 
+            AVG(salario)
+        FROM
+            funcionarios);
+
+-- 5) Quais funcionários estão trabalhando em projetos lotados no departamento com ID 2
+SELECT 
+    *
+FROM
+    funcionarios
+WHERE
+    funcionarios.idFuncionarios IN (SELECT 
+            trabalha_em.Funcionarios_idFuncionarios
+        FROM
+            trabalha_em
+                INNER JOIN
+            projetos ON trabalha_em.Projetos_idProjetos = projetos.idProjetos
+        WHERE
+            funcionarios.idFuncionarios = trabalha_em.Funcionarios_idFuncionarios
+                AND projetos.Departamentos_idDepartamentos = 2);
+ 
+ 
+-- 6) Quais departamentos têm um número de funcionários maior que a média de funcionários por departamento
+SELECT 
+    departamentos.idDepartamentos
+FROM
+    departamentos
+        INNER JOIN
+    lotado_em ON departamentos.idDepartamentos = lotado_em.Departamentos_idDepartamentos
+GROUP BY departamentos.idDepartamentos
+HAVING COUNT(lotado_em.Funcionarios_idFuncionarios) > (SELECT 
+        AVG(contagem)
+    FROM
+        (SELECT 
+            COUNT(lotado_em.Funcionarios_idFuncionarios) AS contagem
+        FROM
+            lotado_em
+        GROUP BY lotado_em.Departamentos_idDepartamentos) AS subquery);
+
+
+-- 7) Quais são os projetos que têm pelo menos 2 funcionário lotado em departamento relacionado
+SELECT 
+    *
+FROM
+    projetos
+WHERE
+    EXISTS( SELECT 
+            *
+        FROM
+            departamentos
+        WHERE
+            projetos.Departamentos_idDepartamentos = departamentos.idDepartamentos
+                AND departamentos.idDepartamentos IN (SELECT 
+                    lotado_em.Departamentos_idDepartamentos
+                FROM
+                    lotado_em
+                GROUP BY lotado_em.Departamentos_idDepartamentos
+                HAVING COUNT(lotado_em.Funcionarios_idFuncionarios) >= 2));
+
+-- 8) Quais são os funcionários que possuem um salário superior ao salário médio do cargo com id = 2?
+SELECT 
+    *
+FROM
+    funcionarios
+WHERE
+    funcionarios.Salario > (SELECT 
+            AVG(funcionarios.Salario)
+        FROM
+            funcionarios
+        WHERE
+            funcionarios.Cargos_idCargos = 2)
+        AND funcionarios.Cargos_idCargos = 2;
+
+-- 9) Liste os cargos que não são oupados por nenhum funcionário
+SELECT 
+    *
+FROM
+    cargos
+WHERE
+    cargos.idCargos NOT IN (SELECT 
+            funcionarios.Cargos_idCargos
+        FROM
+            funcionarios);
+
+
+-- 10)Qual é o salário do funcionário que ocupa o cargo de Gerente?
+SELECT 
+    funcionarios.Salario
+FROM
+    funcionarios
+        INNER JOIN
+    cargos ON cargos.idCargos = funcionarios.Cargos_idCargos
+WHERE
+    cargos.nome = 'Gerente';
+
+-- 11) todos os funcionários que trabalham em todos os projetos
+SELECT 
+    *
+FROM
+    funcionarios
+WHERE
+    funcionarios.idFuncionarios IN (SELECT 
+            trabalha_em.Funcionarios_idFuncionarios
+        FROM
+            trabalha_em
+        GROUP BY trabalha_em.Funcionarios_idFuncionarios
+        HAVING COUNT(trabalha_em.Projetos_idProjetos) = (SELECT 
+                COUNT(*)
+            FROM
+                projetos));
